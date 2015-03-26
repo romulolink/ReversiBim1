@@ -80,16 +80,6 @@ public class ReversiBoard {
         PassCounter = false;
     }
 
-    // Exibe o tabuleiro
-    public void println() {
-        System.out.print("[");
-        for (int i = 0 ; i < 8 ; i++) {
-            for (int j = 0 ; j < 8 ; j++)
-                System.out.print(board[i][j]+",");
-            System.out.println((i == 7? "]":""));
-        }
-    }
-
 
     public int move(Move move, TKind kind) {
         return checkBoard(move,kind);
@@ -187,7 +177,7 @@ public class ReversiBoard {
 
     /*
 
-    Cola de Matrix
+    Cola de Matriz
      _________________
     | 0,0 | 1,0 | 2,0 |
     | 0,1 | 1,1 | 2,1 |
@@ -230,7 +220,7 @@ public class ReversiBoard {
         int max, nb, nw;
     };
 
-    // ?????
+    // @return Object resultFindMax
     private resultFindMax FindMax(int level, TKind me, TKind opponent)  {
         int min,score,tnb,tnw;
         TKind [][] TempBoard = new TKind[8][8];
@@ -246,6 +236,7 @@ public class ReversiBoard {
 
         for (int i = 0 ; i < 8 ; i++)
             for (int j = 0 ; j < 8 ; j++)
+
                 if ((board[i][j] == TKind.nil) && (checkBoard(new Move(i,j),me) != 0)) {
                     if (level != 0) {
                         resultFindMax tres = FindMax(level,opponent,me);
@@ -262,6 +253,8 @@ public class ReversiBoard {
                         res.nb=tnb;
                         res.nw=tnw;
                     }
+
+
                     for (int k = 0 ; k < 8 ; k++)
                         System.arraycopy(TempBoard[k], 0, board[k], 0, 8);
                     System.arraycopy(TempCounter, 0, counter, 0, 2);
@@ -288,28 +281,41 @@ public class ReversiBoard {
         for (int i = 0 ; i < 8 ; i++)
             System.arraycopy(board[i], 0, TempBoard[i], 0, 8);
         System.arraycopy(counter, 0, TempCounter, 0, 2);
+
+
         found=false;
         min=10000;  // high value
         n_min=1;
+
+        // Percorre todoo o tabuleiro
         for (int i = 0 ; i < 8 ; i++)
             for (int j = 0 ; j < 8 ; j++)
+                // Para cada posiçao no tabuleiro checa todas as direçoes, se encontrar jogadas
                 if ((board[i][j] == TKind.nil) && (checkBoard(new Move(i,j),player) != 0)) {
                     if (player == TKind.black)
                         res=FindMax(llevel-1,TKind.white,player);
-                    else res = FindMax(llevel-1,TKind.black,player);
+                    else res = FindMax(llevel-1,TKind.black,player); // como sempre o oponente eh o branco, entra aqui
+
+
+
                     if ((!found)||(min > res.max)) {
                         min=res.max;
-                        nw=res.nw;nb=res.nb;
+                     //   nw=res.nw;nb=res.nb;
                         move.i=i;move.j=j;
                         found=true;
+
                     }
+
+
                     else if (min == res.max) { // RANDOM MOVE GENERATOR
                         n_min++;
                         if (random.nextInt(n_min) == 0) {
-                            nw=res.nw;nb=res.nb;
+                           // nw=res.nw;nb=res.nb;
                             move.i=i;move.j=j;
                         }
                     }
+
+
                     //             if found
                     //             then PreView(nw,nb);
                     for (int k = 0 ; k < 8 ; k++)

@@ -1,29 +1,5 @@
 package br.com.bilac;
 
-/*
-Reversi
-
-Reversi (Othello) is a game based on a grid with eight rows and eight columns, played between you and the computer, by adding pieces with two sides: black and white.
-At the beginning of the game there are 4 pieces in the grid, the player with the black pieces is the first one to place his piece on the board.
-Each player must place a piece in a position that there exists at least one straight (horizontal, vertical, or diagonal) line between the new piece and another piece of the same color, with one or more contiguous opposite pieces between them.
-
-Usage:  java Reversi
-
-10-12-2006 version 0.1: initial release
-26-12-2006 version 0.15: added support for applet
-01-11-2007 version 0.16: minor improvement in level handling
-
-Requirement: Java 1.5 or later
-
-future features:
-- undo
-- save/load board on file, logging of moves
-- autoplay
-- sound
-
-This software is released under the GNU GENERAL PUBLIC LICENSE, see attached file gpl.txt
-*/
-
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -38,7 +14,9 @@ class GPanel extends JPanel implements MouseListener {
     JLabel score_black, score_white;
     String gameTheme;
     Move hint=null;
+    TKind vez = TKind.black;
     boolean inputEnabled, active;
+
 
     public GPanel (ReversiBoard board, JLabel score_black, JLabel score_white, String theme, int level) {
         super();
@@ -50,33 +28,25 @@ class GPanel extends JPanel implements MouseListener {
         addMouseListener(this);
         inputEnabled = true;
         active = true;
+
     }
 
     public void setTheme(String gameTheme)  {
         hint = null;
         this.gameTheme = gameTheme;
-        if (gameTheme.equals("Classic")) {
-            button_black = new ImageIcon(Reversi.class.getResource("button_black.png"));
-            button_white = new ImageIcon(Reversi.class.getResource("button_white.jpg"));
-            setBackground(Color.green);
-        }	else if (gameTheme.equals("Electric")) {
+
+         if (gameTheme.equals("Electric")) {
             button_black = new ImageIcon(Reversi.class.getResource("button_black.png"));
             button_white = new ImageIcon(Reversi.class.getResource("button_white.png"));
             setBackground(Color.white);
-        }	else {
-            gameTheme = "Flat"; // default theme "Flat"
-            setBackground(Color.green);
         }
+
         repaint();
     }
 
-    public void setLevel(int level) {
-        if ((level > 1) && (level < 7)) gameLevel = level;
-    }
 
     public void drawPanel(Graphics g) {
-//	    int currentWidth = getWidth();
-//		int currentHeight = getHeight();
+
         for (int i = 1 ; i < 8 ; i++) {
             g.drawLine(i * Reversi.Square_L, 0, i * Reversi.Square_L, Reversi.Height);
         }
@@ -122,10 +92,10 @@ class GPanel extends JPanel implements MouseListener {
         inputEnabled = false;
         active = false;
         if (board.counter[0] > board.counter[1])
-            JOptionPane.showMessageDialog(this, "You win!","Reversi",JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Você venceu!","Reversi",JOptionPane.INFORMATION_MESSAGE);
         else if (board.counter[0] < board.counter[1])
-            JOptionPane.showMessageDialog(this, "I win!","Reversi",JOptionPane.INFORMATION_MESSAGE);
-        else JOptionPane.showMessageDialog(this, "Drawn!","Reversi",JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Eu venci!","Reversi",JOptionPane.INFORMATION_MESSAGE);
+        else JOptionPane.showMessageDialog(this, "Empate!","Reversi",JOptionPane.INFORMATION_MESSAGE);
     }
 
     public void setHint(Move hint) {
@@ -149,8 +119,14 @@ class GPanel extends JPanel implements MouseListener {
             return;
         }
         Move move = new Move();
+
+        // Modifica move com IA
         if (board.findMove(TKind.white,gameLevel,move)) {
+
+            // Coloca a peça
             board.move(move,TKind.white);
+
+
 
             // Atualiza score
             score_black.setText(Integer.toString(board.getCounter(TKind.black)));
@@ -158,7 +134,7 @@ class GPanel extends JPanel implements MouseListener {
             repaint();
             if (board.gameEnd()) showWinner();
             else if (!board.userCanMove(TKind.black)) {
-                JOptionPane.showMessageDialog(this, "You pass...","Reversi",JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Você passou","Reversi",JOptionPane.INFORMATION_MESSAGE);
                 javax.swing.SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
                         computerMove();
@@ -167,7 +143,7 @@ class GPanel extends JPanel implements MouseListener {
             }
         }
         else if (board.userCanMove(TKind.black))
-            JOptionPane.showMessageDialog(this, "I pass...","Reversi",JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Passei","Reversi",JOptionPane.INFORMATION_MESSAGE);
         else showWinner();
     }
 
@@ -179,26 +155,79 @@ class GPanel extends JPanel implements MouseListener {
             hint = null;
             int i = e.getX() / Reversi.Square_L;
             int j = e.getY() / Reversi.Square_L;
-            if ((i < 8) && (j < 8) && (board.get(i,j) == TKind.nil) && (board.move(new Move(i,j),TKind.black) != 0)) {
-                score_black.setText(Integer.toString(board.getCounter(TKind.black)));
-                score_white.setText(Integer.toString(board.getCounter(TKind.white)));
-                repaint();
-                javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        Cursor savedCursor = getCursor();
-                        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e1) {
-                            e1.printStackTrace();
+
+
+
+            if (!Reversi.enable_multiplayer){
+
+                if ((i < 8) && (j < 8) && (board.get(i,j) == TKind.nil) && (board.move(new Move(i,j),TKind.black) != 0)) {
+                    score_black.setText(Integer.toString(board.getCounter(TKind.black)));
+                    score_white.setText(Integer.toString(board.getCounter(TKind.white)));
+                    repaint();
+                    javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            Cursor savedCursor = getCursor();
+                            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e1) {
+                                e1.printStackTrace();
+                            }
+
+                            computerMove();
+
+                            setCursor(savedCursor);
                         }
-                        computerMove();
-                        setCursor(savedCursor);
-                    }
-                });
+                    });
+                } else
+
+                    JOptionPane.showMessageDialog(this, "Movimento não permitido","Reversi",JOptionPane.INFORMATION_MESSAGE);
+
+            }else {
+
+
+                if ((i < 8) && (j < 8) && (board.get(i,j) == TKind.nil) && (board.move(new Move(i,j),vez ) != 0)) {
+                    score_black.setText(Integer.toString(board.getCounter(TKind.black)));
+                    score_white.setText(Integer.toString(board.getCounter(TKind.white)));
+                    repaint();
+                    javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            Cursor savedCursor = getCursor();
+                            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e1) {
+                                e1.printStackTrace();
+                            }
+
+
+                            if (vez == TKind.black)
+                                vez = TKind.white;
+                            else
+                                vez = TKind.black;
+
+
+                            setCursor(savedCursor);
+                        }
+                    });
+                }else
+                    JOptionPane.showMessageDialog(this, "Movimento não permitido","Reversi",JOptionPane.INFORMATION_MESSAGE);
+
+
+
+
+
             }
-            else JOptionPane.showMessageDialog(this, "Illegal move","Reversi",JOptionPane.INFORMATION_MESSAGE);
+
+
+
+
+
+
+
+
         }
+
     }
 
 
@@ -219,6 +248,7 @@ class GPanel extends JPanel implements MouseListener {
 
     public void mouseReleased(MouseEvent e) {
 // generato quando il mouse viene rilasciato, anche a seguito di click
+
     }
 
 
@@ -229,11 +259,11 @@ public class Reversi extends JFrame implements ActionListener{
     JEditorPane editorPane;
 
     static final String WindowTitle = "Reversi";
+    static boolean enable_multiplayer = false;
     static final String ABOUTMSG = WindowTitle+"\n\n26-12-2006\njavalc6";
 
     static GPanel gpanel;
     static JMenuItem hint;
-    static boolean helpActive = false;
 
     static final int Square_L = 65; // length in pixel of a square in the grid
     static final int  Width = 8 * Square_L; // Width of the game board
@@ -241,7 +271,6 @@ public class Reversi extends JFrame implements ActionListener{
 
     ReversiBoard board;
     static JLabel score_black, score_white;
-    JMenu level, theme;
 
     public Reversi() {
         super(WindowTitle);
@@ -263,7 +292,6 @@ public class Reversi extends JFrame implements ActionListener{
         status.setLayout(new BorderLayout());
         status.add(score_black, BorderLayout.WEST);
         status.add(score_white, BorderLayout.EAST);
-//		status.setMinimumSize(new Dimension(100, 30));
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, gpanel, status);
         splitPane.setOneTouchExpandable(false);
         getContentPane().add(splitPane);
@@ -274,14 +302,9 @@ public class Reversi extends JFrame implements ActionListener{
     }
 
 
-
-    // voci del menu di primo livello
-// File Edit Help
-//
     void setupMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(buildGameMenu());
-        menuBar.add(buildHelpMenu());
         setJMenuBar(menuBar);
     }
 
@@ -295,61 +318,26 @@ public class Reversi extends JFrame implements ActionListener{
     }
 
     protected JMenu buildGameMenu() {
-        JMenu game = new JMenu("Game");
-        JMenuItem newWin = new JMenuItem("New");
-        level = new JMenu("Level");
-        theme = new JMenu("Theme");
-        JMenuItem undo = new JMenuItem("Undo");
-        hint = new JMenuItem("Hint");
-        undo.setEnabled(false);
-        JMenuItem quit = new JMenuItem("Quit");
+        JMenu game = new JMenu("Jogo");
+        JMenuItem newWin = new JMenuItem("Single");
+        JMenuItem quit = new JMenuItem("Sair");
+        final JMenuItem multiplayer = new JMenuItem("Multiplayer");
 
-// build level sub-menu
-        ActionListener newLevel = new ActionListener() {
+
+        multiplayer.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
-                JMenuItem source = (JMenuItem)(e.getSource());
-                gpanel.setLevel(Integer.parseInt(source.getText()));
-            }};
-        ButtonGroup group = new ButtonGroup();
-        JRadioButtonMenuItem rbMenuItem = new JRadioButtonMenuItem("2");
-        group.add(rbMenuItem);
-        level.add(rbMenuItem).addActionListener(newLevel);
-        rbMenuItem = new JRadioButtonMenuItem("3", true);
-        group.add(rbMenuItem);
-        level.add(rbMenuItem).addActionListener(newLevel);
-        rbMenuItem = new JRadioButtonMenuItem("4");
-        group.add(rbMenuItem);
-        level.add(rbMenuItem).addActionListener(newLevel);
-        rbMenuItem = new JRadioButtonMenuItem("5");
-        group.add(rbMenuItem);
-        level.add(rbMenuItem).addActionListener(newLevel);
-        rbMenuItem = new JRadioButtonMenuItem("6");
-        group.add(rbMenuItem);
-        level.add(rbMenuItem).addActionListener(newLevel);
+                enable_multiplayer = true;
+            }
+        });
 
-// build theme sub-menu
-        group = new ButtonGroup();
-        rbMenuItem = new JRadioButtonMenuItem("Classic");
-        group.add(rbMenuItem);
-        theme.add(rbMenuItem);
-        rbMenuItem.addActionListener(this);
-        rbMenuItem = new JRadioButtonMenuItem("Electric", true);
-        group.add(rbMenuItem);
-        theme.add(rbMenuItem);
-        rbMenuItem.addActionListener(this);
-        rbMenuItem = new JRadioButtonMenuItem("Flat");
-        group.add(rbMenuItem);
-        theme.add(rbMenuItem);
-        rbMenuItem.addActionListener(this);
-
-// Begin "New"
+        // Begin "New"
         newWin.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 gpanel.clear();
-                hint.setEnabled(true);
+//                hint.setEnabled(true);
                 repaint();
             }});
-// End "New"
 
 // Begin "Quit"
         quit.addActionListener(new ActionListener() {
@@ -359,154 +347,18 @@ public class Reversi extends JFrame implements ActionListener{
 // End "Quit"
 
 
-// Begin "Hint"
-        hint.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-
-                if (gpanel.active)	{
-                    Move move = new Move();
-                    if (board.findMove(TKind.black,gpanel.gameLevel,move))
-                        gpanel.setHint(move);
-                    repaint();
-	/*					if (board.move(move,TKind.black) != 0) {
-							score_black.setText(Integer.toString(board.getCounter(TKind.black)));
-							score_white.setText(Integer.toString(board.getCounter(TKind.white)));
-							repaint();
-							javax.swing.SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									Cursor savedCursor = getCursor();
-									setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-									gpanel.computerMove();
-									setCursor(savedCursor);
-								}
-							});
-						}
-	*/
-                } else hint.setEnabled(false);
-            }});
-// End "Hint"
-
 
         game.add(newWin);
-        game.addSeparator();
-        game.add(undo);
-        game.add(hint);
-        game.addSeparator();
-        game.add(level);
-        game.add(theme);
+        game.add(multiplayer);
         game.addSeparator();
         game.add(quit);
         return game;
     }
 
 
-    protected JMenu buildHelpMenu() {
-        JMenu help = new JMenu("Help");
-        JMenuItem about = new JMenuItem("About "+WindowTitle+"...");
-        JMenuItem openHelp = new JMenuItem("Help Topics...");
-
-// Begin "Help"
-        openHelp.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                createEditorPane();
-            }});
-// End "Help"
-
-// Begin "About"
-        about.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                ImageIcon icon = new ImageIcon(Reversi.class.getResource("reversi.jpg"));
-                JOptionPane.showMessageDialog(null, ABOUTMSG, "About "+WindowTitle,JOptionPane.PLAIN_MESSAGE, icon);
-            }});
-// End "About"
-
-        help.add(openHelp);
-        help.add(about);
-
-        return help;
-    }
-
-    protected void createEditorPane() {
-        if (helpActive) return;
-        editorPane = new JEditorPane();
-        editorPane.setEditable(false);
-        editorPane.addHyperlinkListener(new HyperlinkListener() {
-            public void hyperlinkUpdate(HyperlinkEvent e) {
-                if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                    if (e instanceof HTMLFrameHyperlinkEvent) {
-                        ((HTMLDocument)editorPane.getDocument()).processHTMLFrameHyperlinkEvent(
-                                (HTMLFrameHyperlinkEvent)e);
-                    } else {
-                        try {
-                            editorPane.setPage(e.getURL());
-                        } catch (java.io.IOException ioe) {
-                            System.out.println("IOE: " + ioe);
-                        }
-                    }
-                }
-            }
-        });
-        java.net.URL helpURL = Reversi.class.getResource("HelpFile.html");
-        if (helpURL != null) {
-            try {
-                editorPane.setPage(helpURL);
-                new HelpWindow(editorPane);
-            } catch (java.io.IOException e) {
-                System.err.println("Attempted to read a bad URL: " + helpURL);
-            }
-        } else {
-            System.err.println("Couldn't find file: HelpFile.html");
-        }
-
-        return;
-    }
-
-
-
-    public class HelpWindow extends JFrame{
-
-        public HelpWindow(JEditorPane editorPane) {
-            super("Help Window");
-            addWindowListener(new WindowAdapter() {
-                public void windowClosing(WindowEvent e) {
-                    Reversi.helpActive = false;
-                    setVisible(false);
-                }
-            });
-
-            JScrollPane editorScrollPane = new JScrollPane(editorPane);
-            editorScrollPane.setVerticalScrollBarPolicy(
-                    JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-            getContentPane().add(editorScrollPane);
-            setSize(600,400);
-            setVisible(true);
-            helpActive = true;
-        }
-    }
-
-    public HyperlinkListener createHyperLinkListener1() {
-        return new HyperlinkListener() {
-            public void hyperlinkUpdate(HyperlinkEvent e) {
-                if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                    if (e instanceof HTMLFrameHyperlinkEvent) {
-                        ((HTMLDocument)editorPane.getDocument()).processHTMLFrameHyperlinkEvent(
-                                (HTMLFrameHyperlinkEvent)e);
-                    } else {
-                        try {
-                            editorPane.setPage(e.getURL());
-                        } catch (java.io.IOException ioe) {
-                            System.out.println("IOE: " + ioe);
-                        }
-                    }
-                }
-            }
-        };
-    }
-
     public static void main(String[] args) {
         try {
-            UIManager.setLookAndFeel(
-                    "com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+            UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
         } catch (Exception e) { }
         Reversi app = new Reversi();
     }
