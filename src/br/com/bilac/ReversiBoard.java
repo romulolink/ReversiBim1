@@ -44,7 +44,7 @@ public class ReversiBoard {
     // Insere a peça na posição atual
     public void set(Move move, TKind player) {
 
-        // ?????
+        // Subtrai do oponente
         switch (board[move.i][move.j]) {
             case white:  counter[1]--; break;
             case black:  counter[0]--; break;
@@ -105,21 +105,32 @@ public class ReversiBoard {
     // Executa a ação de pesquisar linhas, columas e diagonais
     // @return Número de mudanças
     // @param move(i,j) , incremento de x, incremento de y, peça, sinalizador de r/w
+    // Escolhe direão é escolhida usando incx e incy
     private int Check(Move move, int incx, int incy, TKind kind , boolean set)  {
         TKind opponent;
+        // Pega cordenadas de onde o jogador clicou
         int x=move.i;
         int y=move.j;
+
+        // Define quem é o oponente
         if (kind == TKind.black) opponent=TKind.white; else opponent=TKind.black;
+
+        // contador
         int n_inc=0;
+
+        // seta direção
         x+=incx; y+=incy;
 
-        // "Come" as peças dos oponentes
+        // Verifica as peças dos oponentes em uma direção
         // Percorre linhas, colunas e diagonais
+        // Varifica se está no intervalo permitido && se a pedra na posição é do oponente
         while ((x<8) && (x>=0) && (y<8) && (y>=0) && (board[x][y]==opponent)) {
             x+=incx; y+=incy;
+            // acumula total de peças do oponente
             n_inc++;
         }
 
+        // "Come" as peças do oponente chacadas anteriormente
         if ((n_inc != 0) && (x<8) && (x>=0) && (y<8) && (y>=0) && (board[x][y]==kind)) {
             if (set)
                 for (int j = 1 ; j <= n_inc ; j++) {
@@ -132,6 +143,8 @@ public class ReversiBoard {
     }
 
     // Checa todas as possibilidades incrementando j
+    // J é o numero de peças "Comidas"
+    // No jogo pode-se "comer" em multiplas direções
     private int checkBoard(Move move, TKind kind) {
         // check increasing x
         int j=Check(move,1,0,kind,true);
@@ -142,14 +155,19 @@ public class ReversiBoard {
         // check decreasing y
         j+=Check(move,0,-1,kind,true);
         // check diagonals
-        j+=Check(move,1,1,kind,true);
-        j+=Check(move,-1,1,kind,true);
-        j+=Check(move,1,-1,kind,true);
-        j+=Check(move,-1,-1,kind,true);
+        j+=Check(move,1,1,kind,true); // Diagonal dir-baixo
+        j+=Check(move,-1,1,kind,true); // Diagonal esq-baixo
+        j+=Check(move,1,-1,kind,true); // Diagonal dir-superior
+        j+=Check(move,-1,-1,kind,true); // Diagonal esq-superior
+
+        // Se comeu alguém seta
         if (j != 0) set(move,kind);
+
         return j;
     }
 
+    // Valida se jogada é permitida de acordo com regras do Reversi diferenciado do Check pelo ultimo parametro
+    // do método Check
     private boolean isValid(Move move, TKind kind) {
         // check increasing x
         if (Check(move,1,0,kind,false) != 0) return true;
@@ -164,27 +182,42 @@ public class ReversiBoard {
         if (Check(move,-1,1,kind,false) != 0) return true;
         if (Check(move,1,-1,kind,false) != 0) return true;
         if (Check(move,-1,-1,kind,false) != 0) return true;
-        return false;
+          return false;
     }
 
+    /*
+
+    Cola de Matrix
+     _________________
+    | 0,0 | 1,0 | 2,0 |
+    | 0,1 | 1,1 | 2,1 |
+    | 0,2 | 1,2 | 2,2 |
+     -----------------
+     */
+
+    // Percorre contorno do tabuleiro atrás de peças do oponente e retorna o total
     private int strategy(TKind me, TKind opponent) {
         int tstrat=0;
         for (int i = 0 ; i < 8 ; i++)
+            // Percorre primeira linha
             if (board[i][0]==opponent)
                 tstrat++;
             else if (board[i][0]==me)
                 tstrat--;
         for (int i = 0 ; i < 8 ; i++)
+            // Percorre ultima linha
             if (board[i][7]==opponent)
                 tstrat++;
             else if (board[i][7]==me)
                 tstrat--;
         for (int i = 0 ; i < 8 ; i++)
+            // Percorre Primera Coluna
             if (board[0][i]==opponent)
                 tstrat++;
             else if (board[0][i]==me)
                 tstrat--;
         for (int i = 0 ; i < 8 ; i++)
+            // Percorre Ultima Coluna
             if (board[7][i]==opponent)
                 tstrat++;
             else if (board[7][i]==me)
@@ -192,10 +225,12 @@ public class ReversiBoard {
         return tstrat;
     }
 
+    // ??????
     private class resultFindMax {
         int max, nb, nw;
     };
 
+    // ?????
     private resultFindMax FindMax(int level, TKind me, TKind opponent)  {
         int min,score,tnb,tnw;
         TKind [][] TempBoard = new TKind[8][8];
@@ -236,7 +271,7 @@ public class ReversiBoard {
     }
 
 
-
+    // ?????????
     public boolean findMove(TKind player, int llevel, Move move) {
         TKind [][] TempBoard = new TKind[8][8];
         int [] TempCounter = new int[2];
