@@ -23,11 +23,19 @@ Código baixado em: http://trovami.altervista.org/java/reversi
 
 
 ### Recursos
-
+1. Matriz[8][8]
+2. Move()
 1. Boolean enable_multiplayer
 2. enum ['Nil','Black','White']
 3. counter[2] -> 64 peças
 4. sleep(1000)
-5. Check
-6. isValid
-7. checkBoard
+5. Check (Move move, int incx, int incy, kind,  Boolean set ) - Percorre uma direção e retorna total de perças ganhas e as conquista se Boolean set estive habilitado
+6. isValid usa Check() com set = false - Percorre direções
+7. checkBoard usa Check() com set = true  - Percorre direções
+8. userCanMove usa nil e isValid para verificar jogada valida
+9. findMove() | findMax() | strategy()  - Recursos de IA
+
+### Fluxo de Execução
+
+
+
